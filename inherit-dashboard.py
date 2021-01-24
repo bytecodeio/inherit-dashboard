@@ -59,7 +59,7 @@ def MergeDashboards(base, customer, final):
     def GetDashboard(dashboard_id=None):
         DashboardToCopy = sdk.dashboard(dashboard_id=str(dashboard_id))
         return DashboardToCopy
-
+       
     BaseDashboard = GetDashboard(BaseDashboard)
     CustomerDashboardBase = GetDashboard(CustomerDashboard)
     FinalDashboardBase = GetDashboard(FinalDashboard)
@@ -76,7 +76,7 @@ def MergeDashboards(base, customer, final):
     # Delete All Elements on Final Dashboard
     FinalDashboardElements = sdk.dashboard_dashboard_elements(
         FinalDashboardBase.id)
-    for i in FinalDashboardElements:
+    # for i in FinalDashboardElements:
         # if i.title == None:
         #     # print(i.title_text)
         # else:
@@ -87,12 +87,9 @@ def MergeDashboards(base, customer, final):
 
     ##### Step 3 - Get all filters from base dashboard and add to newly created dashboard #######
     # Grab filters from base dashboard
-    BaseFilters = sdk.dashboard_dashboard_filters(
-        dashboard_id=str(BaseDashboard.id))
-    CustomerFilters = sdk.dashboard_dashboard_filters(
-        dashboard_id=str(CustomerDashboardBase.id))
-    FinalFilters = sdk.dashboard_dashboard_filters(
-        dashboard_id=str(FinalDashboardBase.id))
+    BaseFilters = sdk.dashboard_dashboard_filters(dashboard_id=str(BaseDashboard.id))
+    CustomerFilters = sdk.dashboard_dashboard_filters(dashboard_id=str(CustomerDashboardBase.id))
+    FinalFilters = sdk.dashboard_dashboard_filters(dashboard_id=str(FinalDashboardBase.id))
 
     # # # ###### Step 4 - Get all elements from base dashboard and add to newly created dashboard #######
     BaseDashboardElementsToCopy = sdk.dashboard_dashboard_elements(
@@ -131,6 +128,13 @@ def MergeDashboards(base, customer, final):
         if f.title in str(overwrite):
             continue
         else:
+            # Add listener for each existing target filter 
+            for filter in FinalFilters:
+                new_listener = {
+                    "dashboard_filter_name": filter.name,
+                    "field": filter.dimension
+                }
+                f.result_maker['filterables'][0]['listen'].append(new_listener);
             DashboardElementObject = looker_sdk.models.WriteDashboardElement(
                 body_text=f.body_text,
                 dashboard_id=FinalDashboardBase.id,
@@ -156,6 +160,13 @@ def MergeDashboards(base, customer, final):
         if f.type == 'text':
             continue
         else:
+            # Add listener for each existing target filter 
+            for filter in FinalFilters:
+                new_listener = {
+                    "dashboard_filter_name": filter.name,
+                    "field": filter.dimension
+                }
+                f.result_maker['filterables'][0]['listen'].append(new_listener);
             DashboardElementObject = looker_sdk.models.WriteDashboardElement(
                 body_text=f.body_text,
                 dashboard_id=FinalDashboardBase.id,
@@ -355,7 +366,6 @@ def MergeDashboards(base, customer, final):
                     name=f.name,
                     title=f.title,
                     type=f.type,
-                    default_value=f.default_value,
                     explore=f.explore,
                     dimension=f.dimension,
                     allow_multiple_values=f.allow_multiple_values,
@@ -400,7 +410,6 @@ def MergeDashboards(base, customer, final):
                 name=f.name,
                 title=f.title,
                 type=f.type,
-                default_value=f.default_value,
                 explore=f.explore,
                 dimension=f.dimension,
                 allow_multiple_values=f.allow_multiple_values,
