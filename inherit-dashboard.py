@@ -3,9 +3,7 @@
 ########################################################
 import json
 import looker_sdk
-import logging
 import urllib3
-import requests
 from looker_sdk import models
 
 
@@ -22,7 +20,6 @@ def respond(err, res=None):
 
 
 def lambda_handler(event, context):
-    # print("Received event: " + json.dumps(event, indent=2))
     body = json.loads(event.get('body'))
     if body is not None:
         base = body.get('baseId')
@@ -71,16 +68,10 @@ def MergeDashboards(base, customer, final):
         FinalDashboardLayout[i.element_title] = {
             'width': i.width, 'height': i.height, 'row': i.row, 'column': i.column}
 
-    # print(FinalDashboardLayout)
-
     # Delete All Elements on Final Dashboard
     FinalDashboardElements = sdk.dashboard_dashboard_elements(
         FinalDashboardBase.id)
-    # for i in FinalDashboardElements:
-        # if i.title == None:
-        #     # print(i.title_text)
-        # else:
-        #     # print(i.title)
+    for i in FinalDashboardElements:
         sdk.delete_dashboard_element(i.id)
 
     # # ############################################################################################
@@ -104,25 +95,13 @@ def MergeDashboards(base, customer, final):
 
     base_names = []
     cust_names = []
-    # print('Printing names base')
     for i in DashboardLayoutsToCopy[0].dashboard_layout_components:
-        # print(i.element_title)
         base_names.append(i.element_title)
 
-    # print('Printing customer base')
     for i in CustomerLayoutsToCopy[0].dashboard_layout_components:
-        # print(i.element_title)
         cust_names.append(i.element_title)
 
-    # print('Printing output base')
-    # for i in OutputLayoutsToCopy[0].dashboard_layout_components:
-    #     print(i.element_title)
-    #     output_names.append(i.element_title)
-
-    # print(base_names)
-    # print(cust_names)
     overwrite = list(set(base_names) & set(cust_names))
-    # print(overwrite)
 
     for f in BaseDashboardElementsToCopy:
         if f.title in str(overwrite):
@@ -265,8 +244,6 @@ def MergeDashboards(base, customer, final):
                     if j.element_title in str(overwrite):
                         continue
                     else:
-                        # print(i.element_title, ' current row: ', i.row)
-                        # print(j.element_title, ' needs to be row: ', j.row+row_offset)
                         UpdateDashboardLayoutComponent(
                             dashboard_layout_component_id=i.id,
                             dashboard_layout_id=i.dashboard_layout_id,
@@ -282,7 +259,6 @@ def MergeDashboards(base, customer, final):
         for i in NewDashboardLayouts[0].dashboard_layout_components:
             for j in DashboardLayoutsToCopy[0].dashboard_layout_components:
                 if i.element_title == j.element_title and FinalDashboardLayout.get(i.element_title):
-                    # print(FinalDashboardLayout[i.element_title])
                     new_height = FinalDashboardLayout.get(i.element_title, {}).get('height', 0)
                     new_width = FinalDashboardLayout.get(i.element_title, {}).get('width', 0)
                     new_row = FinalDashboardLayout.get(i.element_title, {}).get('row', 0)
@@ -307,9 +283,6 @@ def MergeDashboards(base, customer, final):
                         else:
                             continue
                     else:
-                        # print(i.element_title, ' current row: ', i.row)
-                        # print(j.element_title, ' needs to be row: ', j.row+row_offset)
-                        # print(FinalDashboardLayout[i.element_title])
                         new_height = FinalDashboardLayout.get(i.element_title, {}).get('height', 0)
                         new_width = FinalDashboardLayout.get(i.element_title, {}).get('width', 0)
                         new_row = FinalDashboardLayout.get(i.element_title, {}).get('row', 0)
@@ -340,7 +313,6 @@ def MergeDashboards(base, customer, final):
                 if ff.name == f.name:
                     FinalFilterOverride = ff
             if FinalFilterOverride is None:
-                # print('Filter Name: ' + f.name + ', Row: ' + str(f.row)) # Print out filter names and filter row location if you'd like
                 DashboardFilterObject = looker_sdk.models.WriteCreateDashboardFilter(
                     dashboard_id=FinalDashboardBase.id,
                     name=f.name,
@@ -386,7 +358,6 @@ def MergeDashboards(base, customer, final):
             if ffo.name == f.name:
                 FinalFilterOverride = ffo
         if FinalFilterOverride is None:
-            # print('Filter Name: ' + f.name + ', Row: ' + str(f.row)) # Print out filter names and filter row location if you'd like
             DashboardFilterObject = looker_sdk.models.WriteCreateDashboardFilter(
                 dashboard_id=FinalDashboardBase.id,
                 name=f.name,
